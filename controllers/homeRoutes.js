@@ -1,9 +1,17 @@
-app.get("/stats", (req, res) => {
-    db.Workout.find({})
+const router = require("express").Router();
+const mongoose = require("mongoose");
+const Workout = require("../models/workout.js");
+
+
+router.get("/exercise", (req, res) => {
+    Workout.find({})
+      .sort({ date: -1 })
       .then(dbWorkout => {
         res.json(dbWorkout);
       })
       .catch(err => {
-        res.json(err);
+        res.status(500).json(err);
       });
   });
+
+  module.exports = router;
