@@ -8,72 +8,63 @@ const db = require("../models")
 
 module.exports = function(app) {
 //create new exercises and add to new workout plan
-app.post("/api/workouts", ({body}, res) => {
-    db.Workout.create({body})
-    .then((dbWorkout => {
-        res.json(dbWorkout);
-    }))
-    .catch(err => {
-        res.json(err);
+    app.post("/api/workouts", (req, res) => {
+        db.Workout.create({})
+        .then((dbWorkout => {
+            res.json(dbWorkout);
+        }))
+        .catch(err => {
+            res.json(err);
+        })
     })
-})
 
-//get most recent exercises and add to them
-app.put("/api/workouts/:id", (req, res) => {
-    db.Workout.findOneAndUpdate(
-        {id: req.params.id}, 
-        {$push: { exercises: req.body }},
-        // {new: true}
-    ).then(dbWorkout => {res.json(dbWorkout)})
-    .catch(err => {
-        res.json(err)
+    //update workout plan
+    app.put("/api/workouts/:id", (req, res) => {
+        db.Workout.findByIdAndUpdate(
+            req.params.id, 
+            {$push: { exercises: req.body }},
+            {new: true}
+        ).then(dbWorkout => {res.json(dbWorkout)})
+        .catch(err => {
+            res.json(err)
+        });
     });
-});
 
-//get last workout
-app.get("/api/workouts", (req, res) => {
-    db.Workout.find({})
-    .then(dbWorkout => {
-        res.json(dbWorkout);
-    }).catch(err => {
-        res.json(err);
+    //read recent workouts
+    app.get("/api/workouts", (req, res) => {
+        db.Workout.aggregate([
+            {$addFields: {totalDuration: {$sum: '$exercises.duration'}}}
+        ])
+        .then(dbWorkout => {
+            res.json(dbWorkout);
+        }).catch(err => {
+            res.json(err);
+        })
     })
-})
 
-app.get("/api/workouts/range", (req, res) => {
-    db.Workout.find({})
-    .then(dbWorkout => {
-        res.json(dbWorkout);
-    }).catch(err => {
-        res.json(err)
+    //read recent stats
+    app.get("/api/workouts/range", (req, res) => {
+        db.Workout.aggregate([
+            {$addFields: {totalDuration: {$sum: '$exercises.duration'}, totalWeight: {$sum: '$exercises.weight'}}}
+        ]).limit(7)
+        .then(dbWorkout => {
+            res.json(dbWorkout);
+        }).catch(err => {
+            res.json(err)
+        });
     });
-});
 
-//HTML Routes
-app.get("/exercise", (req, res) => {
-    res.sendFile(path.join(__dirname, "../public/exercise.html"))
-});
+    //HTML Routes
+    app.get("/exercise", (req, res) => {
+        res.sendFile(path.join(__dirname, "../public/exercise.html"))
+    });
 
-app.get("/stats", (req, res) => {
-    res.sendFile(path.join(__dirname, "../public/stats.html"))
-});
+    app.get("/stats", (req, res) => {
+        res.sendFile(path.join(__dirname, "../public/stats.html"))
+    });
 
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "../public/index.html"))
-});
+    app.get("/", (req, res) => {
+        res.sendFile(path.join(__dirname, "../public/index.html"))
+    });
 
-
-
-// app.post("/exercise", (req, res) => {
-//     db.Workout.insert({ type: req.body.type }, { name: req.body.name }, { distance: req.body.distance }, { duration: req.body.duration })
-//     .then(dbWorkout => {
-//         res.json(dbWorkout);
-//     });
-// });
-
-
-  // View the combined weight of multiple exercises from the past seven workouts on the `stats` page.
-
-
-  //View the total duration of each workout from the past seven workouts on the `stats` page.
 }

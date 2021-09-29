@@ -12,12 +12,12 @@ exercises: [
   type: {
     type: String,
     trim: true,
-    required: true,
+    required: "Exercise type is required",
   },
   name: {
     type: String,
     trim: true,
-    required: true
+
   },
   distance: {
     type: Number,
@@ -40,11 +40,8 @@ exercises: [
     required: true, 
   }
 }
-],
+]
 
-totalDuration: {
-    type: Number
-}
 
 });
 
